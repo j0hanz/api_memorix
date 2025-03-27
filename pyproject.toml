@@ -1,0 +1,71 @@
+# Ruff Configuration
+# Documentation: https://docs.astral.sh/ruff/
+
+[tool.ruff]
+exclude = [
+    ".direnv",
+    ".git",
+    ".hg",
+    ".nox",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "build",
+    "dist",
+    "env.py",
+    "manage.py",
+    "media",
+    "migrations",
+    "node_modules",
+    "site-packages",
+    "static",
+    "templates",
+    "venv",
+    "__pycache__",
+    "wsgi.py",
+    "asgi.py",
+]
+line-length = 79
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "Q000",
+    "Q001",
+    "Q003",
+]
+select = [
+    "C",
+    "E4",
+    "E7",
+    "E9",
+    "EM",
+    "F",
+    "DJ",
+    "Q",
+    "I",
+    "UP",
+    "PL",
+    "PIE",
+    "W",
+]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ruff.lint.per-file-ignores]
+"settings.py" = [
+    "F401",
+    "F403",
+    "F405",
+]
+"tests.py" = [
+    "F401",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
