@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 
 class RootRoute(APIView):
-    """Root API endpoint"""
+    """Root API endpoint."""
 
     def get(self, request: Request) -> Response:
         try:
