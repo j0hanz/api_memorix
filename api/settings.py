@@ -33,7 +33,14 @@ CORS_ALLOWED_ORIGINS = [
     'https://*.herokuapp.com',
     'http://localhost:5173',
 ]
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -48,10 +55,12 @@ INSTALLED_APPS = [
     'cloudinary',
     'rest_framework',
     'rest_framework.authtoken',
-    'dj_rest_auth',
     'django.contrib.sites',
-    'dj_rest_auth.registration',
+    'users',
 ]
+
+# Site configuration
+SITE_ID = 1
 
 # Middleware
 MIDDLEWARE = [
@@ -108,23 +117,18 @@ cloudinary.config(
     secure=True,
 )
 
-# Authentication & REST Framework
+# REST Framework
 REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'memorix-access-token',
     'JWT_AUTH_REFRESH_COOKIE': 'memorix-refresh-token',
-    'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ]
 }
-
-# Site configuration
-SITE_ID = 1
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
