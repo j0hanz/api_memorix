@@ -29,13 +29,9 @@ class Profile(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_or_update_profile(
-    sender,
-    instance,
-    created,
-    **kwargs,
-):
+def create_or_update_profile(sender, instance, created, **kwargs):
+    """Create or update user profile when User model is saved."""
     if created:
         Profile.objects.create(owner=instance)
-    else:
+    elif hasattr(instance, 'profile'):
         instance.profile.save()

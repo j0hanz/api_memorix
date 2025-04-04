@@ -6,7 +6,7 @@ from .models import Profile
 from .serializers import ProfileSerializer
 
 
-class ProfileListCreateView(generics.ListAPIView):
+class ProfileListCreateView(generics.ListCreateAPIView):
     """View to list and create profiles."""
 
     queryset = Profile.objects.select_related('owner').all()

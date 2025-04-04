@@ -1,6 +1,7 @@
 """Django settings."""
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import cloudinary
@@ -22,29 +23,7 @@ ALLOWED_HOSTS = [
     '.herokuapp.com',
 ]
 
-# CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.herokuapp.com',
-    'http://localhost:5173',
-]
-
-# CORS
-CORS_ALLOWED_ORIGINS = [
-    'https://*.herokuapp.com',
-    'http://localhost:5173',
-]
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = True
-
-# Installed Apps
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,9 +39,6 @@ INSTALLED_APPS = [
     'users',
 ]
 
-# Site configuration
-SITE_ID = 1
-
 # Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -75,8 +51,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# URL configuration
 ROOT_URLCONF = 'api.urls'
-
 WSGI_APPLICATION = 'api.wsgi.application'
 
 # Templates configuration
@@ -111,30 +87,7 @@ else:
     DATABASES['default']['CONN_MAX_AGE'] = 60
     print('Production environment')
 
-# Cloudinary configuration
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_NAME'),
-    api_key=os.getenv('CLOUDINARY_KEY'),
-    api_secret=os.getenv('CLOUDINARY_SECRET'),
-    secure=True,
-)
-
-STATIC_URL = '/static/'
-
-# REST Framework
-REST_AUTH = {
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'memorix-access-token',
-    'JWT_AUTH_REFRESH_COOKIE': 'memorix-refresh-token',
-}
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ]
-}
-
-# Password validation
+# Authentication settings
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -150,11 +103,87 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# REST Framework configuration
+# https://www.django-rest-framework.org/api-guide/settings/#settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# Rest Auth configuration
+# https://django-rest-auth.readthedocs.io/en/latest/index.html
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': 'memorix-access-token',
+    'JWT_AUTH_REFRESH_COOKIE': 'memorix-refresh-token',
+}
+
+# JWT settings
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Europe/Berlin'
 USE_I18N = True
 USE_TZ = True
+
+# Static files
+STATIC_URL = '/static/'
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    'https://*.herokuapp.com',
+    'http://localhost:5173',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.herokuapp.com',
+    'http://localhost:5173',
+]
+
+# Cloudinary configuration
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_NAME'),
+    api_key=os.getenv('CLOUDINARY_KEY'),
+    api_secret=os.getenv('CLOUDINARY_SECRET'),
+    secure=True,
+)
+
+# Site configuration
+SITE_ID = 1
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
