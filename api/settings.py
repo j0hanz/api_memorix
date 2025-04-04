@@ -119,6 +119,8 @@ cloudinary.config(
     secure=True,
 )
 
+STATIC_URL = '/static/'
+
 # REST Framework
 REST_AUTH = {
     'USE_JWT': True,
