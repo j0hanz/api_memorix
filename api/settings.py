@@ -145,6 +145,9 @@ REST_AUTH = {
     # 'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
 
+# Disable email verification
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Europe/Berlin'
