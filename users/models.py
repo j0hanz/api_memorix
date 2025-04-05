@@ -25,13 +25,10 @@ class Profile(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.owner.username}'s profile"
+        return f"{self.owner}'s profile"
 
 
 @receiver(post_save, sender=User)
-def create_or_update_profile(sender, instance, created, **kwargs):
-    """Create or update user profile when User model is saved."""
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(owner=instance)
-    elif hasattr(instance, 'profile'):
-        instance.profile.save()
