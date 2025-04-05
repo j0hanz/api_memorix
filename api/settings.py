@@ -142,7 +142,7 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'memorix-access-token',
     'JWT_AUTH_REFRESH_COOKIE': 'memorix-refresh-token',
-    # 'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
+    'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
 
 # Disable email verification
