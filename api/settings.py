@@ -27,11 +27,6 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r'^https://.*\.codeinstitute-ide\.net$',
-    r'^http://localhost:5173$',
-]
-
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
     'https://*.herokuapp.com',
@@ -131,7 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ]
 }
