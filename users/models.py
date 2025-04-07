@@ -13,7 +13,7 @@ class Profile(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = CloudinaryField(
         'image',
-        default='nobody_nrbk5n',
+        default='profile_gtdj73',
         blank=True,
         null=True,
         help_text='Upload a profile picture',
