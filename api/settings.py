@@ -1,6 +1,7 @@
 """Django settings."""
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import cloudinary
@@ -121,6 +122,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Disable email verification
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 # REST Framework configuration
 # https://www.django-rest-framework.org/api-guide/settings/#settings
 REST_FRAMEWORK = {
@@ -130,17 +134,22 @@ REST_FRAMEWORK = {
     ]
 }
 
+# JWT settings
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
 # Rest Auth configuration
 # https://django-rest-auth.readthedocs.io/en/latest/index.html
 REST_AUTH = {
     'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'memorix-access-token',
-    'JWT_AUTH_REFRESH_COOKIE': 'memorix-refresh-token',
+    'JWT_AUTH_COOKIE': '_auth',
+    'JWT_AUTH_REFRESH_COOKIE': '_refresh',
+    'JWT_AUTH_HTTPONLY': False,
     'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
-
-# Disable email verification
-ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
