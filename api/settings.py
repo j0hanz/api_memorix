@@ -134,13 +134,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-# JWT settings
-# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-}
-
 # Rest Auth configuration
 # https://django-rest-auth.readthedocs.io/en/latest/index.html
 REST_AUTH = {
@@ -149,6 +142,13 @@ REST_AUTH = {
     'JWT_AUTH_REFRESH_COOKIE': '_refresh',
     'JWT_AUTH_HTTPONLY': False,
     'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
+}
+
+# JWT settings
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # Internationalization
