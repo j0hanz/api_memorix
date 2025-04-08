@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from rest_framework import serializers
 
 from .models import Profile
@@ -18,7 +20,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = [
+        fields: ClassVar[list] = [
             'id',
             'owner',
             'owner_username',
@@ -28,4 +30,9 @@ class ProfileSerializer(serializers.ModelSerializer):
             'updated_at',
             'is_owner',
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields: ClassVar[list] = [
+            'id',
+            'owner',
+            'created_at',
+            'updated_at',
+        ]

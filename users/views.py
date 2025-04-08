@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from rest_framework import viewsets
 
 from api.permissions import IsOwnerOrReadOnly
@@ -11,4 +13,4 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     queryset = Profile.objects.select_related('owner').all()
     serializer_class = ProfileSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]

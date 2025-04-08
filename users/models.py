@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -22,7 +24,7 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering: ClassVar[list] = ['-created_at']
 
     def __str__(self):
         return f"{self.owner}'s profile"
