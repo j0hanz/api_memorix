@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 
+from common.constants import GAME_CATEGORIES
 from memorix.models import Category
 
 
@@ -7,28 +8,7 @@ class Command(BaseCommand):
     help = 'Load initial categories for Memorix'
 
     def handle(self, *args, **kwargs):
-        categories = [
-            {
-                'name': 'Animals',
-                'code': 'ANIMALS',
-                'description': 'Animal-themed memory cards',
-            },
-            {
-                'name': 'Astronomy',
-                'code': 'ASTRONOMY',
-                'description': 'Space-themed memory cards',
-            },
-            {
-                'name': 'Patterns',
-                'code': 'PATTERN',
-                'description': 'Pattern-themed memory cards',
-            },
-            {
-                'name': 'Sushi',
-                'code': 'SUSHI',
-                'description': 'Sushi-themed memory cards',
-            },
-        ]
+        categories = GAME_CATEGORIES
         created_count = 0
         for cat in categories:
             _, created = Category.objects.get_or_create(

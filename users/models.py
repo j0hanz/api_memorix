@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from common.constants import DEFAULT_PROFILE_PICTURE
+
 User = get_user_model()
 
 
@@ -15,7 +17,7 @@ class Profile(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = CloudinaryField(
         'image',
-        default='profile_gtdj73',
+        default=DEFAULT_PROFILE_PICTURE,
         blank=True,
         null=True,
         help_text='Upload a profile picture',

@@ -2,14 +2,18 @@ from typing import ClassVar
 
 from django.db import models
 
+from common.constants import (
+    CATEGORY_CODE_MAX_LENGTH,
+    CATEGORY_NAME_MAX_LENGTH,
+)
 from users.models import Profile
 
 
 class Category(models.Model):
     """Model for game categories"""
 
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=CATEGORY_NAME_MAX_LENGTH)
+    code = models.CharField(max_length=CATEGORY_CODE_MAX_LENGTH, unique=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

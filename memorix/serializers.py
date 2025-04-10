@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from rest_framework import serializers
 
-from common.datetime_utils import shortnaturaltime
+from common.datetime_utils import format_completed_at
 from common.score_utils import prepare_score_data
 
 from .models import Category, Score
@@ -40,10 +40,9 @@ class ScoreSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        if instance.completed_at:
-            representation['completed_at'] = shortnaturaltime(
-                instance.completed_at
-            )
+        representation['completed_at'] = format_completed_at(
+            instance.completed_at
+        )
         return representation
 
     def create(self, validated_data):
