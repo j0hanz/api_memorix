@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'corsheaders',
     'users',
+    'memorix',
 ]
 
 SITE_ID = 1
