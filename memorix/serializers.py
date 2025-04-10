@@ -2,8 +2,8 @@ from typing import ClassVar
 
 from rest_framework import serializers
 
-from utils.datetime_utils import shortnaturaltime
-from utils.score_utils import prepare_score_data
+from common.datetime_utils import shortnaturaltime
+from common.score_utils import prepare_score_data
 
 from .models import Category, Score
 
