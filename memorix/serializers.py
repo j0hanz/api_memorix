@@ -46,5 +46,15 @@ class ScoreSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
-        validated_data = prepare_score_data(validated_data, self.context)
-        return super().create(validated_data)
+        prepared_data = prepare_score_data(validated_data, self.context)
+        lookup_fields = {
+            'profile': prepared_data.get('profile'),
+            'category': prepared_data.get('category'),
+            'moves': prepared_data.get('moves'),
+            'time_seconds': prepared_data.get('time_seconds'),
+            'stars': prepared_data.get('stars'),
+        }
+        instance, created = Score.objects.update_or_create(
+            **lookup_fields, defaults={}
+        )
+        return instance
