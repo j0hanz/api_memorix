@@ -18,6 +18,9 @@ class ScoreSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='profile.owner.username')
     category_name = serializers.ReadOnlyField(source='category.name')
     category = serializers.CharField(write_only=True)
+    profile_picture_url = serializers.ReadOnlyField(
+        source='profile.profile_picture.url'
+    )
 
     class Meta:
         model = Score
@@ -25,6 +28,7 @@ class ScoreSerializer(serializers.ModelSerializer):
             'id',
             'profile',
             'username',
+            'profile_picture_url',
             'category',
             'category_name',
             'moves',
