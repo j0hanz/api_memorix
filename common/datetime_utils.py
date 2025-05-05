@@ -1,18 +1,41 @@
 import datetime
 
+from common.constants import (
+    DAY_HOURS,
+    HOUR_MINUTES,
+    JUST_NOW_SECONDS,
+    MINUTE_SECONDS,
+    WEEK_DAYS,
+    YESTERDAY_DAYS,
+)
+
 
 def shortnaturaltime(value) -> str:
-    """Convert a datetime to a human-readable string."""
+    """Format a datetime object into a human-readable string."""
     now = datetime.datetime.now(datetime.UTC)
     delta = now - value
+    seconds = int(delta.total_seconds())
+    minutes = seconds // MINUTE_SECONDS
+    hours = seconds // (HOUR_MINUTES * MINUTE_SECONDS)
+    days = delta.days
 
-    if delta < datetime.timedelta(minutes=1):
-        return 'just now'
-    if delta < datetime.timedelta(hours=1):
-        return f'{int(delta.total_seconds() // 60)}m'
-    if delta < datetime.timedelta(days=1):
-        return f'{int(delta.total_seconds() // 3600)}h'
-    return f'{delta.days}d'
+    if seconds < JUST_NOW_SECONDS:
+        result = 'just now'
+    elif seconds < MINUTE_SECONDS:
+        result = f'{seconds}s'
+    elif minutes < HOUR_MINUTES:
+        result = f'{minutes}m'
+    elif hours < DAY_HOURS:
+        result = f'{hours}h'
+    elif days == YESTERDAY_DAYS:
+        result = 'yesterday'
+    elif days < WEEK_DAYS:
+        result = f'{days}d'
+    else:
+        weeks = days // WEEK_DAYS
+        result = f'{weeks}w'
+
+    return result
 
 
 def format_completed_at(completed_at):

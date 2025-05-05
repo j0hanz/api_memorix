@@ -28,3 +28,11 @@ GAME_CATEGORIES = [
         'description': 'Sushi-themed memory cards',
     },
 ]
+
+# Datetime constants
+JUST_NOW_SECONDS = 10
+MINUTE_SECONDS = 60
+HOUR_MINUTES = 60
+DAY_HOURS = 24
+WEEK_DAYS = 7
+YESTERDAY_DAYS = 1

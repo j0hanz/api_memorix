@@ -1,5 +1,6 @@
 from typing import ClassVar
 
+from django.db.models import Max
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -54,4 +55,38 @@ class ScoreViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(category_id=category_id)
         top_results = queryset.order_by('-stars', 'time_seconds', 'moves')[:10]
         serializer = self.get_serializer(top_results, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def best(self, request):
+        """Get the user's best scores for each category"""
+        user = self.request.user
+        if not user.is_authenticated:
+            return Response([])
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return Response([])
+        categories = (
+            Score.objects.filter(profile=profile)
+            .values_list('category', flat=True)
+            .distinct()
+        )
+
+        best_scores = []
+        for category_id in categories:
+            max_stars = Score.objects.filter(
+                profile=profile, category=category_id
+            ).aggregate(Max('stars'))['stars__max']
+            best_score = (
+                Score.objects.filter(
+                    profile=profile, category=category_id, stars=max_stars
+                )
+                .order_by('moves', 'time_seconds')
+                .first()
+            )
+
+            if best_score:
+                best_scores.append(best_score)
+
+        serializer = self.get_serializer(best_scores, many=True)
         return Response(serializer.data)
