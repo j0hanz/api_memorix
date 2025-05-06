@@ -141,13 +141,18 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 }
 
+if DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append(
+        'rest_framework.renderers.BrowsableAPIRenderer'
+    )
+
 # Rest Auth configuration
 # https://django-rest-auth.readthedocs.io/en/latest/index.html
 REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': '_auth',
     'JWT_AUTH_REFRESH_COOKIE': '_refresh',
-    'JWT_AUTH_HTTPONLY': False,
+    'JWT_AUTH_HTTPONLY': True,
     'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
 
@@ -178,3 +183,18 @@ cloudinary.config(
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
