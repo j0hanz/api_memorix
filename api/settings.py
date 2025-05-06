@@ -17,11 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security settings
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = 'DEV' in os.environ
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.herokuapp.com',
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 # CORS settings
 CORS_ALLOW_CREDENTIALS = True
@@ -29,10 +25,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 
 # CSRF settings
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.herokuapp.com',
-    'http://localhost:5173',
-]
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 # Application definition
 INSTALLED_APPS = [
