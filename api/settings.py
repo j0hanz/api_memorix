@@ -150,8 +150,6 @@ if DEBUG:
 # https://django-rest-auth.readthedocs.io/en/latest/index.html
 REST_AUTH = {
     'USE_JWT': True,
-    'JWT_AUTH_COOKIE': '_auth',
-    'JWT_AUTH_REFRESH_COOKIE': '_refresh',
     'JWT_AUTH_HTTPONLY': False,
     'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
 }
