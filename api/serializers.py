@@ -1,4 +1,4 @@
-from dj_rest_auth.serializers import UserDetailsSerializer
+from dj_rest_auth.serializers import UserDetailsSerializer, JWTSerializer as BaseJWTSerializer
 from rest_framework import serializers
 
 
@@ -16,3 +16,11 @@ class CurrentUserSerializer(UserDetailsSerializer):
             'profile_id',
             'profile_image',
         )
+
+class PublicJWTSerializer(BaseJWTSerializer):
+    """Serializer for JWT tokens with refresh token included"""
+    @property
+    def data(self):
+        data = super().data
+        data["refresh"] = self.token.get("refresh")
+        return data
