@@ -23,9 +23,9 @@ GAME_CATEGORIES = [
         'description': 'Pattern-themed memory cards',
     },
     {
-        'name': 'Sushi',
-        'code': 'SUSHI',
-        'description': 'Sushi-themed memory cards',
+        'name': 'Food',
+        'code': 'FOOD',
+        'description': 'Food-themed memory cards',
     },
 ]
 
