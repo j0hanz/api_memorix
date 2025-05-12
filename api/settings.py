@@ -17,17 +17,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security settings
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = 'DEV' in os.environ
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h]
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    o for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o
+]
 
 # CORS settings
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r'^https://[^.]+\.herokuapp\.com$',
+CORS_ALLOWED_ORIGINS = [
+    o for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o
 ]
-
-# CSRF settings
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -176,12 +177,16 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Cloudinary configuration
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_NAME'),
-    api_key=os.getenv('CLOUDINARY_KEY'),
-    api_secret=os.getenv('CLOUDINARY_SECRET'),
-    secure=True,
-)
+cloud_name = os.getenv('CLOUDINARY_NAME')
+api_key = os.getenv('CLOUDINARY_KEY')
+api_secret = os.getenv('CLOUDINARY_SECRET')
+if cloud_name and api_key and api_secret:
+    cloudinary.config(
+        cloud_name=cloud_name,
+        api_key=api_key,
+        api_secret=api_secret,
+        secure=True,
+    )
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
