@@ -13,19 +13,29 @@ GAME_CATEGORIES = [
         'description': 'Animal-themed memory cards',
     },
     {
-        'name': 'Astronomy',
-        'code': 'ASTRONOMY',
-        'description': 'Space-themed memory cards',
+        'name': 'Nature',
+        'code': 'NATURE',
+        'description': 'Nature-themed memory cards',
     },
     {
-        'name': 'Patterns',
-        'code': 'PATTERN',
-        'description': 'Pattern-themed memory cards',
+        'name': 'Vehicles',
+        'code': 'VEHICLES',
+        'description': 'Vehicles-themed memory cards',
     },
     {
         'name': 'Food',
         'code': 'FOOD',
         'description': 'Food-themed memory cards',
+    },
+    {
+        'name': 'Shapes',
+        'code': 'SHAPES',
+        'description': 'Shapes-themed memory cards',
+    },
+    {
+        'name': 'Numbers',
+        'code': 'NUMBERS',
+        'description': 'Numbers-themed memory cards',
     },
 ]
 
