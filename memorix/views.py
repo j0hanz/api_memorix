@@ -6,9 +6,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.permissions import IsOwnerOrReadOnly
-from common.score_utils import get_leaderboard_scores, get_user_best_scores
+from common.utils import (
+    get_best_scores_data,
+    get_leaderboard_data,
+    get_user_scores_queryset,
+)
 
-from .models import Category, Score
+from .models import Category
 from .serializers import CategorySerializer, ScoreSerializer
 
 
@@ -40,20 +44,7 @@ class ScoreViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
-        """Retrieve scores for the authenticated user"""
-        user = self.request.user
-        if not user.is_authenticated:
-            return Score.objects.none()
-        profile = getattr(user, 'profile', None)
-        queryset = (
-            Score.objects.filter(profile=profile)
-            if profile
-            else Score.objects.none()
-        )
-        category = self.request.query_params.get('category')
-        if category:
-            queryset = queryset.filter(category__code=category.upper())
-        return queryset
+        return get_user_scores_queryset(self.request)
 
     def perform_create(self, serializer):
         """Save the score with the associated profile"""
@@ -61,19 +52,10 @@ class ScoreViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def leaderboard(self, request):
-        """Retrieve leaderboard scores for a specific category"""
-        category_id = request.query_params.get('category')
-        top_results = get_leaderboard_scores(category_id)
-        serializer = self.get_serializer(top_results, many=True)
-        return Response(serializer.data)
+        data = get_leaderboard_data(request, self.get_serializer_class())
+        return Response(data)
 
     @action(detail=False, methods=['get'])
     def best(self, request):
-        """Retrieve the best scores for the authenticated user"""
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        if not user.is_authenticated or not profile:
-            return Response([])
-        best_scores = get_user_best_scores(profile)
-        serializer = self.get_serializer(best_scores, many=True)
-        return Response(serializer.data)
+        data = get_best_scores_data(request, self.get_serializer_class())
+        return Response(data)
