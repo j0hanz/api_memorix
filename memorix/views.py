@@ -6,14 +6,15 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.permissions import IsOwnerOrReadOnly
-from common.utils import (
-    get_best_scores_data,
-    get_leaderboard_data,
-    get_user_scores_queryset,
-)
+from common.leaderboard import get_category_leaderboard
+from common.utils import get_best_scores_data, get_user_scores_queryset
 
 from .models import Category
-from .serializers import CategorySerializer, ScoreSerializer
+from .serializers import (
+    CategorySerializer,
+    LeaderboardSerializer,
+    ScoreSerializer,
+)
 
 
 class ScorePagination(PageNumberPagination):
@@ -27,7 +28,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
 
 class ScoreViewSet(viewsets.ModelViewSet):
@@ -39,7 +40,7 @@ class ScoreViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Assign permissions based on action"""
-        if self.action in ['leaderboard']:
+        if self.action in ['leaderboard', 'best']:
             return [permissions.AllowAny()]
         return super().get_permissions()
 
@@ -51,11 +52,17 @@ class ScoreViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     @action(detail=False, methods=['get'])
-    def leaderboard(self, request):
-        data = get_leaderboard_data(request, self.get_serializer_class())
-        return Response(data)
-
-    @action(detail=False, methods=['get'])
     def best(self, request):
         data = get_best_scores_data(request, self.get_serializer_class())
         return Response(data)
+
+
+class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for leaderboard"""
+
+    serializer_class = LeaderboardSerializer
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
+
+    def get_queryset(self):
+        category_id = self.request.query_params.get('category')
+        return get_category_leaderboard(category_id)

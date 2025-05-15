@@ -5,7 +5,7 @@ from rest_framework import serializers
 from common.datetime import format_completed_at
 from common.score import prepare_score_data
 
-from .models import Category, Score
+from .models import Category, Leaderboard, Score
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -62,3 +62,37 @@ class ScoreSerializer(serializers.ModelSerializer):
             **lookup_fields, defaults={}
         )
         return instance
+
+
+class LeaderboardSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='score.profile.owner.username')
+    profile_id = serializers.ReadOnlyField(source='score.profile.id')
+    profile_picture_url = serializers.ReadOnlyField(
+        source='score.profile.profile_picture.url'
+    )
+    category_name = serializers.ReadOnlyField(source='category.name')
+    category_code = serializers.ReadOnlyField(source='category.code')
+    moves = serializers.ReadOnlyField(source='score.moves')
+    time_seconds = serializers.ReadOnlyField(source='score.time_seconds')
+    stars = serializers.ReadOnlyField(source='score.stars')
+    completed_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Leaderboard
+        fields: ClassVar[list] = [
+            'id',
+            'rank',
+            'username',
+            'profile_id',
+            'profile_picture_url',
+            'category',
+            'category_name',
+            'category_code',
+            'moves',
+            'time_seconds',
+            'stars',
+            'completed_at',
+        ]
+
+    def get_completed_at(self, obj):
+        return format_completed_at(obj.score.completed_at)

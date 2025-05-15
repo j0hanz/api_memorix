@@ -1,6 +1,8 @@
 from typing import ClassVar
 
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from common.constants import (
     CATEGORY_CODE_MAX_LENGTH,
@@ -56,3 +58,36 @@ class Score(models.Model):
 
     def __str__(self):
         return f"{self.profile.owner.username}'s game - {self.stars} stars"
+
+
+class Leaderboard(models.Model):
+    """Model for leaderboard entries"""
+
+    score = models.OneToOneField(
+        Score, on_delete=models.CASCADE, related_name='leaderboard_entry'
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name='leaderboard_entries'
+    )
+    rank = models.PositiveSmallIntegerField()
+
+    class Meta:
+        ordering: ClassVar[list[str]] = ['category', 'rank']
+        constraints: ClassVar[list[models.UniqueConstraint]] = [
+            models.UniqueConstraint(
+                fields=['category', 'rank'], name='unique_leaderboard_rank'
+            )
+        ]
+        verbose_name_plural = 'Leaderboards'
+
+    def __str__(self):
+        return f'Rank {self.rank}: {self.score}'
+
+
+@receiver(post_save, sender=Score)
+def update_leaderboard(sender, instance, created, **kwargs):
+    """Update leaderboard when a new score is created"""
+    from common.leaderboard import update_category_leaderboard
+
+    if created or kwargs.get('update_fields'):
+        update_category_leaderboard(instance.category)
