@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from memorix.models import Leaderboard, Score, Category
+from memorix.models import Category, Leaderboard, Score
 
 
 def update_category_leaderboard(category, top_count=5):
@@ -12,11 +12,9 @@ def update_category_leaderboard(category, top_count=5):
     existing_entries.delete()
     leaderboard_entries = []
     for rank, score in enumerate(top_scores, 1):
-        leaderboard_entries.append(Leaderboard(
-            score=score,
-            category=category,
-            rank=rank
-        ))
+        leaderboard_entries.append(
+            Leaderboard(score=score, category=category, rank=rank)
+        )
     if leaderboard_entries:
         Leaderboard.objects.bulk_create(leaderboard_entries)
 
@@ -37,6 +35,7 @@ def get_category_leaderboard(category_id=None, top_count=5):
         top_entries.extend(entries[:top_count])
 
     return top_entries
+
 
 def update_leaderboard_async(category_id):
     """Update leaderboard for a category using its ID."""
