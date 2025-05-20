@@ -5,18 +5,20 @@ from memorix.models import Leaderboard, Score, Category
 
 def update_category_leaderboard(category, top_count=5):
     """Update the leaderboard for a specific category."""
-
     top_scores = Score.objects.filter(category=category).order_by(
         '-stars', 'time_seconds', 'moves'
     )[:top_count]
     existing_entries = Leaderboard.objects.filter(category=category)
-    top_score_ids = [score.id for score in top_scores]
-    entries_to_remove = existing_entries.exclude(score_id__in=top_score_ids)
-    entries_to_remove.delete()
+    existing_entries.delete()
+    leaderboard_entries = []
     for rank, score in enumerate(top_scores, 1):
-        Leaderboard.objects.update_or_create(
-            score=score, category=category, defaults={'rank': rank}
-        )
+        leaderboard_entries.append(Leaderboard(
+            score=score,
+            category=category,
+            rank=rank
+        ))
+    if leaderboard_entries:
+        Leaderboard.objects.bulk_create(leaderboard_entries)
 
 
 def get_category_leaderboard(category_id=None, top_count=5):
