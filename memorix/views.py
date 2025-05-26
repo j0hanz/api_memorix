@@ -20,7 +20,7 @@ from .serializers import (
 class ScorePagination(PageNumberPagination):
     """Pagination class for scores"""
 
-    page_size = 5
+    page_size = 3
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
