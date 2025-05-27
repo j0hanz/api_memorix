@@ -245,22 +245,22 @@ curl -X GET "http://localhost:8000/api/memorix/leaderboard/?category=1"
 
 ```
 api_memorix/
-├── api/                   # Main configuration
+├── api/                      # Main configuration
 │   ├── settings.py           # Django + DRF settings
 │   ├── urls.py               # Root URL routing
 │   ├── permissions.py        # Custom DRF permissions
 │   └── serializers.py        # JWT & user serializers
-├── memorix/               # Core game functionality
+├── memorix/                  # Core game functionality
 │   ├── models.py             # Category, Score, Leaderboard
 │   ├── serializers.py        # DRF serializers with validation
 │   ├── views.py              # ViewSets with custom actions
 │   ├── tasks.py              # Background leaderboard updates
 │   └── management/commands/  # Data initialization
-├── users/                 # User management
+├── users/                    # User management
 │   ├── models.py             # Profile with Cloudinary images
 │   ├── serializers.py        # Profile serialization
 │   └── views.py              # Profile ViewSet
-└── common/                # Shared utilities
+└── common/                   # Shared utilities
     ├── constants.py          # Game constants & validation
     ├── score.py              # Score processing logic
     ├── leaderboard.py        # Ranking algorithms
