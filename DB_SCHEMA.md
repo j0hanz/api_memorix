@@ -47,9 +47,19 @@
 - **Leaderboard**: `(category_id, rank)`
 
 ### Field Validation
-- **Moves**: Min: 1, Max: 10000
-- **Time**: Min: 1s, Max: 86400s (24h)
-- **Stars**: Min: 1, Max: 5
+
+#### Category Model
+- **name**: Max length: 100 characters (defined by [`CATEGORY_NAME_MAX_LENGTH`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py))
+- **code**: Max length: 50 characters (defined by [`CATEGORY_CODE_MAX_LENGTH`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py)), Must be unique
+- **description**: Max length: 500 characters (defined by [`CATEGORY_DESCRIPTION_MAX_LENGTH`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py))
+
+#### Score Model
+- **moves**: Min: 1 (defined by [`MIN_MOVES`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py)), Max: 10000 (defined by [`MAX_MOVES`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py))
+- **time_seconds**: Min: 1 (defined by [`MIN_TIME_SECONDS`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py)), Max: 86400 (24 hours, defined by [`MAX_TIME_SECONDS`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py))
+- **stars**: Min: 1 (defined by [`MIN_STARS`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py)), Max: 5 (defined by [`MAX_STARS`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py))
+
+#### Leaderboard Model
+- **rank**: Min: 1, Max: 1000 (defined by [`MAX_LEADERBOARD_RANK`](e%3A%5Capi_drf%5Ccommon%5Cconstants.py)), Must be unique per category
 
 ## Relationships
 
