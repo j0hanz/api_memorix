@@ -1,12 +1,21 @@
 from typing import ClassVar
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from common.constants import (
     CATEGORY_CODE_MAX_LENGTH,
+    CATEGORY_DESCRIPTION_MAX_LENGTH,
     CATEGORY_NAME_MAX_LENGTH,
+    MAX_LEADERBOARD_RANK,
+    MAX_MOVES,
+    MAX_STARS,
+    MAX_TIME_SECONDS,
+    MIN_MOVES,
+    MIN_STARS,
+    MIN_TIME_SECONDS,
 )
 from users.models import Profile
 
@@ -16,7 +25,9 @@ class Category(models.Model):
 
     name = models.CharField(max_length=CATEGORY_NAME_MAX_LENGTH)
     code = models.CharField(max_length=CATEGORY_CODE_MAX_LENGTH, unique=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True, max_length=CATEGORY_DESCRIPTION_MAX_LENGTH
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -36,9 +47,18 @@ class Score(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='results'
     )
-    moves = models.PositiveIntegerField()
-    time_seconds = models.PositiveIntegerField()
-    stars = models.PositiveSmallIntegerField()
+    moves = models.PositiveIntegerField(
+        validators=[MinValueValidator(MIN_MOVES), MaxValueValidator(MAX_MOVES)]
+    )
+    time_seconds = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(MIN_TIME_SECONDS),
+            MaxValueValidator(MAX_TIME_SECONDS),
+        ]
+    )
+    stars = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(MIN_STARS), MaxValueValidator(MAX_STARS)]
+    )
     completed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -69,7 +89,12 @@ class Leaderboard(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name='leaderboard_entries'
     )
-    rank = models.PositiveSmallIntegerField()
+    rank = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(MAX_LEADERBOARD_RANK),
+        ]
+    )
 
     class Meta:
         ordering: ClassVar[list[str]] = ['category', 'rank']

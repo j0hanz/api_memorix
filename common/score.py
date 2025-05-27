@@ -16,7 +16,7 @@ def prepare_score_data(validated_data, context):
             {'category': f"Category '{category_code}' not found"}
         ) from err
 
-    if request and hasattr(request, 'user'):
+    if request and hasattr(request, 'user') and request.user.is_authenticated:
         validated_data['profile'] = request.user.profile
     else:
         raise serializers.ValidationError(
