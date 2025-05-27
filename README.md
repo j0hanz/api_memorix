@@ -1,4 +1,4 @@
-# Memorix API 🧠🎮
+# Memorix API
 
 A memory card game with leaderboards, user profiles, and performance tracking.
 
@@ -6,22 +6,22 @@ A memory card game with leaderboards, user profiles, and performance tracking.
 [![Django](https://img.shields.io/badge/Django-5.2+-green.svg)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.16+-orange.svg)](https://www.django-rest-framework.org/)
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [🎯 Overview](#overview)
-- [✨ Features](#features)
-- [🚀 Quick Start](#quick-start)
-- [📱 API Documentation](#api-documentation)
-- [🏗️ Architecture](#architecture)
-- [🔧 Configuration](#configuration)
-- [🛠️ Development](#development)
-- [🧪 Testing](#testing)
-- [🚢 Deployment](#deployment)
-- [🤝 Contributing](#contributing)
+- [Overview](#overview)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [API Documentation](#api-documentation)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
 
 ---
 
-## 🎯 Overview
+## Overview
 
 Memorix API is a Django REST Framework backend that powers a competitive memory card game. Players match cards across different themed categories, submit their scores, and compete on category-specific leaderboards. The API handles user authentication, score validation, leaderboard management, and profile customization.
 
@@ -34,28 +34,28 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
 
 ---
 
-## ✨ Features
+## Features
 
-### 🔐 Authentication & Security
+### Authentication & Security
 - **JWT Token Authentication** with refresh token support
 - **Rate Limiting** to prevent abuse (60 score submissions/hour)
 - **Input Validation** with cross-field checks to prevent cheating
 - **HTTPS & Security Headers** in production
 - **CORS Configuration** for frontend integration
 
-### 🎮 Game Mechanics
+### Game Mechanics
 - **Multiple Categories**: 6 themed card categories
 - **Score Validation**: Realistic time/moves/stars combinations
 - **Duplicate Prevention**: Unique constraints for identical scores
 - **Performance Tracking**: Best scores per category per user
 
-### 🏆 Competitive Features
+### Competitive Features
 - **Real-time Leaderboards** updated via background tasks
 - **Category-specific Rankings** (top 5 per category)
 - **Star Rating System** (1-5 stars based on performance)
 - **Profile Pictures** via Cloudinary integration
 
-### 🛡️ Data Integrity
+### Data Integrity
 - **Cross-field Validation**: Prevents impossible game combinations
 - **Rate Limiting**: 60 score submissions per hour per user
 - **Unique Constraints**: Prevents duplicate identical scores
@@ -63,7 +63,7 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.12+
@@ -111,11 +111,11 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
    python manage.py runserver
    ```
 
-🎉 **Your API is now running at `http://localhost:8000`**
+**Your API is now running at `http://localhost:8000`**
 
 ---
 
-## 📱 API Documentation
+## API Documentation
 
 ### Base URL
 - **Development**: `http://localhost:8000`
@@ -196,7 +196,7 @@ curl -X GET "http://localhost:8000/api/memorix/leaderboard/?category=1"
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Database Schema
 
@@ -245,22 +245,22 @@ curl -X GET "http://localhost:8000/api/memorix/leaderboard/?category=1"
 
 ```
 api_memorix/
-├── 🌐 api/                   # Main configuration
+├── api/                   # Main configuration
 │   ├── settings.py           # Django + DRF settings
 │   ├── urls.py               # Root URL routing
 │   ├── permissions.py        # Custom DRF permissions
 │   └── serializers.py        # JWT & user serializers
-├── 🎮 memorix/               # Core game functionality
+├── memorix/               # Core game functionality
 │   ├── models.py             # Category, Score, Leaderboard
 │   ├── serializers.py        # DRF serializers with validation
 │   ├── views.py              # ViewSets with custom actions
 │   ├── tasks.py              # Background leaderboard updates
 │   └── management/commands/  # Data initialization
-├── 👥 users/                 # User management
+├── users/                 # User management
 │   ├── models.py             # Profile with Cloudinary images
 │   ├── serializers.py        # Profile serialization
 │   └── views.py              # Profile ViewSet
-└── 🔧 common/                # Shared utilities
+└── common/                # Shared utilities
     ├── constants.py          # Game constants & validation
     ├── score.py              # Score processing logic
     ├── leaderboard.py        # Ranking algorithms
@@ -277,7 +277,7 @@ api_memorix/
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -326,7 +326,7 @@ The system includes 6 pre-defined categories:
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Code Style
 
@@ -383,7 +383,7 @@ python manage.py showmigrations
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 
@@ -417,7 +417,7 @@ python manage.py test memorix.tests.ScoreAPITest.test_create_score_validation_er
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Production Setup
 
@@ -474,7 +474,7 @@ CMD ["gunicorn", "api.wsgi:application", "--bind", "0.0.0.0:8000"]
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -499,14 +499,14 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ### Reporting Issues
 
 Please use GitHub Issues for:
-- 🐛 Bug reports
-- 💡 Feature requests
-- 📖 Documentation improvements
-- ❓ Questions about usage
+- Bug reports
+- Feature requests
+- Documentation improvements
+- Questions about usage
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Django REST Framework](https://www.django-rest-framework.org/) for the excellent API framework
 - [Cloudinary](https://cloudinary.com/) for image hosting services
