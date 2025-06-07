@@ -144,12 +144,13 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
 
 ### User Profile Endpoints
 
-| Method  | Endpoint              | Description            | Auth Required |
-| ------- | --------------------- | ---------------------- | ------------- |
-| `GET`   | `/api/profiles/`      | List all profiles      | ❌             |
-| `GET`   | `/api/profiles/{id}/` | Get profile details    | ❌             |
-| `PUT`   | `/api/profiles/{id}/` | Update own profile     | ✅             |
-| `PATCH` | `/api/profiles/{id}/` | Partial profile update | ✅             |
+| Method   | Endpoint              | Description            | Auth Required |
+| -------- | --------------------- | ---------------------- | ------------- |
+| `GET`    | `/api/profiles/`      | List all profiles      | ❌             |
+| `GET`    | `/api/profiles/{id}/` | Get profile details    | ❌             |
+| `PUT`    | `/api/profiles/{id}/` | Update own profile     | ✅             |
+| `PATCH`  | `/api/profiles/{id}/` | Partial profile update | ✅             |
+| `DELETE` | `/api/profiles/{id}/` | Delete own profile     | ✅             |
 
 ### Example Requests
 

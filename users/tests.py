@@ -129,17 +129,37 @@ class ProfileAPITest(APITestCase):
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_delete_profile_not_allowed(self):
-        """Test that profiles cannot be deleted via API"""
+    def test_delete_own_profile_allowed(self):
+        """Test that users can delete their own profile"""
         self.client.credentials(
             HTTP_AUTHORIZATION=f'Bearer {self.access_token}'
         )
         url = reverse('profile-detail', kwargs={'pk': self.user.profile.id})
         response = self.client.delete(url)
-        # Should not be allowed or should return 405 Method Not Allowed
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_403_FORBIDDEN, status.HTTP_405_METHOD_NOT_ALLOWED],
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            Profile.objects.filter(id=self.user.profile.id).exists()
+        )
+
+    def test_delete_other_profile_forbidden(self):
+        """Test that users cannot delete other users' profiles"""
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {self.access_token}'
+        )
+        url = reverse('profile-detail', kwargs={'pk': self.user2.profile.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(
+            Profile.objects.filter(id=self.user2.profile.id).exists()
+        )
+
+    def test_delete_profile_unauthenticated(self):
+        """Test that unauthenticated users cannot delete profiles"""
+        url = reverse('profile-detail', kwargs={'pk': self.user.profile.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(
+            Profile.objects.filter(id=self.user.profile.id).exists()
         )
 
     def test_profile_serializer_fields(self):
@@ -195,7 +215,7 @@ class ProfileAPITest(APITestCase):
             'created_at': '2020-01-01T00:00:00Z',  # Should not change
             'id': 999,  # Should not change
         }
-        response = self.client.patch(url, data, format='json')
+        self.client.patch(url, data, format='json')
 
         # Refresh from database
         self.user.profile.refresh_from_db()
@@ -204,3 +224,40 @@ class ProfileAPITest(APITestCase):
         self.assertEqual(self.user.profile.owner.id, self.user.id)
         self.assertEqual(self.user.profile.created_at, original_created_at)
         self.assertNotEqual(self.user.profile.id, 999)
+
+    def test_profile_deletion_cascades_to_scores(self):
+        """Test that deleting a profile via API also deletes associated scores"""
+        # Import Score here to avoid circular imports
+        from memorix.models import Category, Score
+
+        # Create a category and score for the user
+        category = Category.objects.create(
+            name='Test Category',
+            code='TEST_CAT',
+            description='Test category for profile deletion',
+        )
+        score = Score.objects.create(
+            profile=self.user.profile,
+            category=category,
+            moves=20,
+            time_seconds=60,
+            stars=4,
+        )
+
+        # Verify score exists
+        self.assertTrue(Score.objects.filter(id=score.id).exists())
+
+        # Delete the profile via API
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {self.access_token}'
+        )
+        url = reverse('profile-detail', kwargs={'pk': self.user.profile.id})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Verify both profile and score are deleted
+        self.assertFalse(
+            Profile.objects.filter(id=self.user.profile.id).exists()
+        )
+        self.assertFalse(Score.objects.filter(id=score.id).exists())

@@ -11,6 +11,7 @@ exclude = [
     "dist",
     "env.py",
     "manage.py",
+    "tests.py",
     "media",
     "migrations",
     "node_modules",

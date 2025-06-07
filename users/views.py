@@ -17,8 +17,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
     permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]
 
     def destroy(self, request, *args, **kwargs):
-        """Prevent profile deletion via API"""
+        """Allow users to delete their own profile"""
+        profile = self.get_object()
+
+        if profile.owner != request.user:
+            return Response(
+                {'detail': 'You can only delete your own profile.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        profile.delete()
+
         return Response(
-            {'detail': 'Profile deletion is not allowed.'},
-            status=status.HTTP_403_FORBIDDEN,
+            {'detail': 'Profile deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT,
         )

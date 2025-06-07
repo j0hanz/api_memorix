@@ -57,7 +57,8 @@ class ScoreSerializer(serializers.ModelSerializer):
         """Security: Validate moves are within realistic range"""
         if not MIN_MOVES <= value <= MAX_MOVES:
             raise ValidationError(
-                f'Moves must be between {MIN_MOVES} and {MAX_MOVES}'        )
+                f'Moves must be between {MIN_MOVES} and {MAX_MOVES}'
+            )
         return value
 
     def validate_time_seconds(self, value):
@@ -86,8 +87,12 @@ class ScoreSerializer(serializers.ModelSerializer):
             min_time_per_move = 0.1
             if time_seconds < (moves * min_time_per_move):
                 raise ValidationError('Time too short for the number of moves')
-        if (stars and stars >= HIGH_STAR_THRESHOLD and
-            moves and moves > MAX_MOVES_FOR_HIGH_STARS):
+        if (
+            stars
+            and stars >= HIGH_STAR_THRESHOLD
+            and moves
+            and moves > MAX_MOVES_FOR_HIGH_STARS
+        ):
             raise ValidationError(
                 'High star rating with excessive moves is unrealistic'
             )
