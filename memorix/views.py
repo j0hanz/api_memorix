@@ -18,6 +18,34 @@ from .serializers import (
 )
 
 
+class BaseGameViewSetMixin:
+    """Mixin providing common game-related functionality for ViewSets."""
+
+    def get_category_or_404(self, category_code):
+        """Get category by code or return 404 response."""
+        from .models import Category
+
+        try:
+            return Category.objects.get(code=category_code.upper())
+        except Category.DoesNotExist:
+            return None
+
+    def require_authentication(self, request):
+        """Check if user is authenticated, return error response if not."""
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication required.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        return None
+
+    def get_user_profile_or_404(self, request):
+        """Get user's profile or return 404 response."""
+        if not request.user.is_authenticated:
+            return None
+        return getattr(request.user, 'profile', None)
+
+
 class ScoreSubmissionThrottle(UserRateThrottle):
     """Security: Custom throttle for score submissions"""
 
@@ -38,8 +66,8 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes: ClassVar[list] = [permissions.AllowAny]
 
 
-class ScoreViewSet(viewsets.ModelViewSet):
-    """ViewSet for game results"""
+class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
+    """ViewSet for managing game scores."""
 
     serializer_class = ScoreSerializer
     permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]
@@ -80,17 +108,50 @@ class ScoreViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def best(self, request):
+        """Get user's best scores across all categories."""
         data = get_best_scores_data(request, self.get_serializer_class())
         return Response(data)
 
+    @action(detail=False, methods=['get'], url_path='recent')
+    def recent_scores(self, request):
+        """Get user's most recent game scores."""
+        queryset = self.get_queryset().order_by('-completed_at')[:10]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='category/(?P<category_code>[^/.]+)',
+    )
+    def by_category(self, request, category_code=None):
+        """Get user's scores for a specific category."""
+        category = self.get_category_or_404(category_code)
+        if not category:
+            return Response(
+                {'detail': 'Category not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        queryset = self.get_queryset().filter(category=category)
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet for leaderboard"""
+    """ViewSet for managing game leaderboards."""
 
     serializer_class = LeaderboardSerializer
     permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     def get_queryset(self):
+        """Optimize queryset based on action and filter by category."""
         if self.action == 'retrieve':
             return Leaderboard.objects.select_related(
                 'score', 'score__profile', 'score__profile__owner', 'category'
@@ -104,3 +165,85 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
             )
         else:
             return Leaderboard.objects.none()
+
+    @action(detail=False, methods=['get'], url_path='top/(?P<limit>[0-9]+)')
+    def top_players(self, request, limit=None):
+        """Get top N players across all categories."""
+        try:
+            limit = min(int(limit), 100)
+        except (ValueError, TypeError):
+            limit = 10
+
+        queryset = self.get_queryset()[:limit]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def user_rank(self, request):
+        """Get user's rankings across all categories."""
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication required.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user_ranks = []
+        user_profile = getattr(request.user, 'profile', None)
+
+        if user_profile:
+            from .models import Category
+
+            for category in Category.objects.all():
+                try:
+                    leaderboard_entry = Leaderboard.objects.get(
+                        score__profile=user_profile, category=category
+                    )
+                    user_ranks.append(
+                        {
+                            'category': category.name,
+                            'category_code': category.code,
+                            'rank': leaderboard_entry.rank,
+                            'score_id': leaderboard_entry.score.id,
+                        }
+                    )
+                except Leaderboard.DoesNotExist:
+                    continue
+
+        return Response(
+            {'username': request.user.username, 'rankings': user_ranks}
+        )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='category/(?P<category_code>[^/.]+)/top/(?P<limit>[0-9]+)',
+    )
+    def category_top(self, request, category_code=None, limit=None):
+        """Get top players for a specific category."""
+        from .models import Category
+
+        try:
+            category = Category.objects.get(code=category_code.upper())
+            limit = min(int(limit), 50)
+        except (ValueError, TypeError):
+            limit = 10
+        except Category.DoesNotExist:
+            return Response(
+                {'detail': 'Category not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        queryset = (
+            Leaderboard.objects.filter(category=category)
+            .select_related('score', 'score__profile', 'score__profile__owner')
+            .order_by('rank')[:limit]
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {
+                'category': category.name,
+                'category_code': category.code,
+                'leaderboard': serializer.data,
+            }
+        )
