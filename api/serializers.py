@@ -1,5 +1,9 @@
 from dj_rest_auth.serializers import JWTSerializer as BaseJWTSerializer
-from dj_rest_auth.serializers import UserDetailsSerializer
+from dj_rest_auth.serializers import (
+    PasswordChangeSerializer,
+    UserDetailsSerializer,
+)
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 
@@ -22,8 +26,26 @@ class CurrentUserSerializer(UserDetailsSerializer):
 class PublicJWTSerializer(BaseJWTSerializer):
     """Serializer for JWT tokens with refresh token included"""
 
-    @property
-    def data(self):
-        data = super().data
-        data['refresh'] = self.token.get('refresh')
-        return data
+
+class CustomPasswordChangeSerializer(PasswordChangeSerializer):
+    """Serializer for changing user passwords with additional validation"""
+
+    def validate_old_password(self, value):
+        """Validate that the old password is correct"""
+        if not self.context['request'].user.check_password(value):
+            raise serializers.ValidationError(_('Invalid current password.'))
+        return value
+
+    def validate(self, attrs):
+        """Additional validation"""
+        attrs = super().validate(attrs)
+
+        old_password = attrs.get('old_password')
+        new_password1 = attrs.get('new_password1')
+
+        if old_password and new_password1 and old_password == new_password1:
+            raise serializers.ValidationError(
+                _('New password must be different from current password.')
+            )
+
+        return attrs

@@ -184,11 +184,10 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_HTTPONLY': False,
     'USER_DETAILS_SERIALIZER': 'api.serializers.CurrentUserSerializer',
-}
-
-# JWT settings for REST Auth
-REST_AUTH_SERIALIZERS = {
+    'OLD_PASSWORD_FIELD_ENABLED': True,
+    'LOGOUT_ON_PASSWORD_CHANGE': False,
     'JWT_SERIALIZER': 'api.serializers.PublicJWTSerializer',
+    'PASSWORD_CHANGE_SERIALIZER': 'api.serializers.CustomPasswordChangeSerializer',
 }
 
 # JWT settings
