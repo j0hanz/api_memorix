@@ -233,6 +233,7 @@ class LeaderboardModelTest(TestCase):
         self.category = Category.objects.create(
             name='Test Category', code='TEST_CAT'
         )
+        # Create score but clear any auto-generated leaderboard entries for testing
         self.score = Score.objects.create(
             profile=self.profile,
             category=self.category,
@@ -240,6 +241,8 @@ class LeaderboardModelTest(TestCase):
             time_seconds=60,
             stars=5,
         )
+        # Clear auto-generated leaderboard entries for manual testing
+        Leaderboard.objects.filter(category=self.category).delete()
 
     def test_leaderboard_creation(self):
         """Test leaderboard entry is created correctly"""
@@ -319,7 +322,10 @@ class LeaderboardModelTest(TestCase):
             stars=3,
         )
 
-        # Create leaderboard entries
+        # Clear any auto-generated leaderboard entries
+        Leaderboard.objects.all().delete()
+
+        # Create leaderboard entries manually for testing
         lb1 = Leaderboard.objects.create(
             score=self.score, category=self.category, rank=1
         )
@@ -886,6 +892,9 @@ class LeaderboardAPITest(APITestCase):
             time_seconds=60,
             stars=5,
         )
+
+        # Clear auto-generated leaderboard entries from signal handler
+        Leaderboard.objects.filter(category=self.category).delete()
 
         self.leaderboard = Leaderboard.objects.create(
             score=self.score, category=self.category, rank=1

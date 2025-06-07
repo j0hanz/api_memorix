@@ -111,8 +111,8 @@ class Leaderboard(models.Model):
 
 @receiver(post_save, sender=Score)
 def update_leaderboard(sender, instance, created, **kwargs):
-    """Queue leaderboard update when a new score is created"""
-    from memorix.tasks import update_leaderboard_task
+    """Update leaderboard when a new score is saved."""
+    from common.leaderboard import update_category_leaderboard
 
     if created or kwargs.get('update_fields'):
-        update_leaderboard_task(instance.category.id)
+        update_category_leaderboard(instance.category)

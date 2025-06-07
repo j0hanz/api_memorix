@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from memorix.models import Category, Leaderboard, Score
+from memorix.models import Leaderboard, Score
 
 
 def update_category_leaderboard(category, top_count=5):
@@ -35,13 +35,3 @@ def get_category_leaderboard(category_id=None, top_count=5):
         top_entries.extend(entries[:top_count])
 
     return top_entries
-
-
-def update_leaderboard_async(category_id):
-    """Update leaderboard for a category using its ID."""
-    try:
-        category = Category.objects.get(id=category_id)
-        update_category_leaderboard(category)
-    except Category.DoesNotExist:
-        # Handle the error or log it
-        pass

@@ -6,13 +6,13 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 
 from api.permissions import IsOwnerOrReadOnly
+from common.actions import LeaderboardActionMixin, ScoreActionMixin
 from common.filters import LeaderboardFilter, ScoreFilter
-from common.utils import get_best_scores_data
+from common.viewset import GameLeaderboardViewSetMixin, GameScoreViewSetMixin
 
-from .models import Category, Leaderboard, Score
+from .models import Category, Leaderboard
 from .serializers import (
     CategorySerializer,
     LeaderboardSerializer,
@@ -48,12 +48,6 @@ class BaseGameViewSetMixin:
         return getattr(request.user, 'profile', None)
 
 
-class ScoreSubmissionThrottle(UserRateThrottle):
-    """Security: Custom throttle for score submissions"""
-
-    scope = 'score_submit'
-
-
 class ScorePagination(PageNumberPagination):
     """Pagination class for scores"""
 
@@ -77,7 +71,12 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     ordering: ClassVar[list[str]] = ['name']
 
 
-class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
+class ScoreViewSet(
+    BaseGameViewSetMixin,
+    ScoreActionMixin,
+    GameScoreViewSetMixin,
+    viewsets.ModelViewSet,
+):
     """ViewSet for managing game scores."""
 
     serializer_class = ScoreSerializer
@@ -101,81 +100,15 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
     ]
     ordering: ClassVar[list[str]] = ['-completed_at']
 
-    def get_permissions(self):
-        """Assign permissions based on action"""
-        if self.action in ['leaderboard', 'best']:
-            return [permissions.AllowAny()]
-        return super().get_permissions()
-
-    def get_throttles(self):
-        """Security: Apply stricter throttling to score creation"""
-        if self.action == 'create':
-            return [ScoreSubmissionThrottle()]
-        return super().get_throttles()
-
-    def get_queryset(self):
-        """Return queryset for the current user."""
-        user = self.request.user
-        if not user.is_authenticated:
-            return Score.objects.none()
-
-        profile = getattr(user, 'profile', None)
-        if not profile:
-            return Score.objects.none()
-
-        return Score.objects.filter(profile=profile).select_related(
-            'profile', 'profile__owner', 'category'
-        )
-
-    def update(self, request, *args, **kwargs):
-        """Disable score updates"""
-        return Response(
-            {'detail': 'Method not allowed.'},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
-
-    def partial_update(self, request, *args, **kwargs):
-        """Disable partial score updates"""
-        return Response(
-            {'detail': 'Method not allowed.'},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
-
-    def perform_create(self, serializer):
-        """Save the score with the associated profile"""
-        serializer.save()
-
-    def destroy(self, request, *args, **kwargs):
-        """Delete a user's score with proper security checks."""
-        score = self.get_object()
-        if score.profile.owner != request.user:
-            return Response(
-                {'detail': 'You can only delete your own scores.'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        category_id = score.category.id
-        score.delete()
-        from memorix.tasks import update_leaderboard_task
-
-        update_leaderboard_task(category_id)
-
-        return Response(
-            {'detail': 'Score deleted successfully.'},
-            status=status.HTTP_204_NO_CONTENT,
-        )
-
     @action(detail=False, methods=['get'])
     def best(self, request):
         """Get user's best scores across all categories."""
-        data = get_best_scores_data(request, self.get_serializer_class())
-        return Response(data)
+        return self.handle_best_scores(request)
 
     @action(detail=False, methods=['get'], url_path='recent')
     def recent_scores(self, request):
         """Get user's most recent game scores."""
-        queryset = self.get_queryset().order_by('-completed_at')[:10]
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return self.handle_recent_scores(request)
 
     @action(
         detail=False,
@@ -184,23 +117,7 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
     )
     def by_category(self, request, category_code=None):
         """Get user's scores for a specific category."""
-        category = self.get_category_or_404(category_code)
-        if not category:
-            return Response(
-                {'detail': 'Category not found.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        queryset = self.filter_queryset(
-            self.get_queryset().filter(category=category)
-        )
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return self.handle_scores_by_category(request, category_code)
 
     @action(
         detail=False,
@@ -209,59 +126,22 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
     )
     def clear_category_scores(self, request, category_code=None):
         """Clear all user's scores for a specific category."""
-        category = self.get_category_or_404(category_code)
-        if not category:
-            return Response(
-                {'detail': 'Category not found.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        scores_to_delete = self.get_queryset().filter(category=category)
-        deleted_count = scores_to_delete.count()
-
-        if deleted_count == 0:
-            return Response(
-                {'detail': 'No scores found for this category.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        scores_to_delete.delete()
-        from memorix.tasks import update_leaderboard_task
-
-        update_leaderboard_task(category.id)
-
-        return Response(
-            {'detail': f'Deleted {deleted_count} scores for {category.name}'},
-            status=status.HTTP_200_OK,
-        )
+        return self.handle_clear_category_scores(request, category_code)
 
     @action(detail=False, methods=['delete'], url_path='clear-all')
     def clear_all_scores(self, request):
         """Clear all user's scores across all categories."""
-        scores_to_delete = self.get_queryset()
-        deleted_count = scores_to_delete.count()
-
-        if deleted_count == 0:
-            return Response(
-                {'detail': 'No scores found to delete.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        categories = set(
-            scores_to_delete.values_list('category_id', flat=True)
-        )
-        scores_to_delete.delete()
-        from memorix.tasks import update_leaderboard_task
-
-        for category_id in categories:
-            update_leaderboard_task(category_id)
-
-        return Response(
-            {'detail': f'Deleted {deleted_count} scores'},
-            status=status.HTTP_200_OK,
-        )
+        return self.handle_clear_all_scores(request)
 
 
-class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
+class LeaderboardViewSet(
+    LeaderboardActionMixin,
+    GameLeaderboardViewSetMixin,
+    viewsets.ReadOnlyModelViewSet,
+):
     """ViewSet for managing game leaderboards."""
 
+    queryset = Leaderboard.objects.all()
     serializer_class = LeaderboardSerializer
     permission_classes: ClassVar[list] = [permissions.AllowAny]
     filter_backends: ClassVar[list] = [
@@ -283,62 +163,15 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     ordering: ClassVar[list[str]] = ['category', 'rank']
 
-    def get_queryset(self):
-        """Optimize queryset based on action."""
-        if self.action == 'retrieve':
-            return Leaderboard.objects.select_related(
-                'score', 'score__profile', 'score__profile__owner', 'category'
-            )
-        return Leaderboard.objects.select_related(
-            'score', 'score__profile', 'score__profile__owner', 'category'
-        ).order_by('category', 'rank')
-
     @action(detail=False, methods=['get'], url_path='top/(?P<limit>[0-9]+)')
     def top_players(self, request, limit=None):
         """Get top N players across all categories."""
-        try:
-            limit = min(int(limit), 100)
-        except (ValueError, TypeError):
-            limit = 10
-
-        queryset = self.get_queryset()[:limit]
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return self.handle_top_players(request, limit)
 
     @action(detail=False, methods=['get'])
     def user_rank(self, request):
         """Get user's rankings across all categories."""
-        if not request.user.is_authenticated:
-            return Response(
-                {'detail': 'Authentication required.'},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        user_ranks = []
-        user_profile = getattr(request.user, 'profile', None)
-
-        if user_profile:
-            from .models import Category
-
-            for category in Category.objects.all():
-                try:
-                    leaderboard_entry = Leaderboard.objects.get(
-                        score__profile=user_profile, category=category
-                    )
-                    user_ranks.append(
-                        {
-                            'category': category.name,
-                            'category_code': category.code,
-                            'rank': leaderboard_entry.rank,
-                            'score_id': leaderboard_entry.score.id,
-                        }
-                    )
-                except Leaderboard.DoesNotExist:
-                    continue
-
-        return Response(
-            {'username': request.user.username, 'rankings': user_ranks}
-        )
+        return self.handle_user_rank(request)
 
     @action(
         detail=False,
@@ -347,30 +180,4 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def category_top(self, request, category_code=None, limit=None):
         """Get top players for a specific category."""
-        from .models import Category
-
-        try:
-            category = Category.objects.get(code=category_code.upper())
-            limit = min(int(limit), 50)
-        except (ValueError, TypeError):
-            limit = 10
-        except Category.DoesNotExist:
-            return Response(
-                {'detail': 'Category not found.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        queryset = (
-            Leaderboard.objects.filter(category=category)
-            .select_related('score', 'score__profile', 'score__profile__owner')
-            .order_by('rank')[:limit]
-        )
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(
-            {
-                'category': category.name,
-                'category_code': category.code,
-                'leaderboard': serializer.data,
-            }
-        )
+        return self.handle_category_top(request, category_code, limit)
