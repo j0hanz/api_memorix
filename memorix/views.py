@@ -145,6 +145,25 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
         """Save the score with the associated profile"""
         serializer.save()
 
+    def destroy(self, request, *args, **kwargs):
+        """Delete a user's score with proper security checks."""
+        score = self.get_object()
+        if score.profile.owner != request.user:
+            return Response(
+                {'detail': 'You can only delete your own scores.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        category_id = score.category.id
+        score.delete()
+        from memorix.tasks import update_leaderboard_task
+
+        update_leaderboard_task(category_id)
+
+        return Response(
+            {'detail': 'Score deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+
     @action(detail=False, methods=['get'])
     def best(self, request):
         """Get user's best scores across all categories."""
@@ -182,6 +201,62 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['delete'],
+        url_path='clear/(?P<category_code>[^/.]+)',
+    )
+    def clear_category_scores(self, request, category_code=None):
+        """Clear all user's scores for a specific category."""
+        category = self.get_category_or_404(category_code)
+        if not category:
+            return Response(
+                {'detail': 'Category not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        scores_to_delete = self.get_queryset().filter(category=category)
+        deleted_count = scores_to_delete.count()
+
+        if deleted_count == 0:
+            return Response(
+                {'detail': 'No scores found for this category.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        scores_to_delete.delete()
+        from memorix.tasks import update_leaderboard_task
+
+        update_leaderboard_task(category.id)
+
+        return Response(
+            {'detail': f'Deleted {deleted_count} scores for {category.name}'},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=['delete'], url_path='clear-all')
+    def clear_all_scores(self, request):
+        """Clear all user's scores across all categories."""
+        scores_to_delete = self.get_queryset()
+        deleted_count = scores_to_delete.count()
+
+        if deleted_count == 0:
+            return Response(
+                {'detail': 'No scores found to delete.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        categories = set(
+            scores_to_delete.values_list('category_id', flat=True)
+        )
+        scores_to_delete.delete()
+        from memorix.tasks import update_leaderboard_task
+
+        for category_id in categories:
+            update_leaderboard_task(category_id)
+
+        return Response(
+            {'detail': f'Deleted {deleted_count} scores'},
+            status=status.HTTP_200_OK,
+        )
 
 
 class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):

@@ -658,10 +658,8 @@ class ScoreAPITest(APITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
         )
-
-        # Filter by ANIMALS category
         url = reverse('gameresult-list')
-        response = self.client.get(url, {'category': 'ANIMALS'})
+        response = self.client.get(url, {'category_code': 'ANIMALS'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
@@ -689,6 +687,179 @@ class ScoreAPITest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_delete_own_score(self):
+        """Test deleting own score"""
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        url = reverse('gameresult-detail', kwargs={'pk': self.score.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Score.objects.filter(pk=self.score.pk).exists())
+
+    def test_delete_other_user_score_forbidden(self):
+        """Test deleting another user's score is forbidden"""
+        tokens = self.get_tokens_for_user(self.user2)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        url = reverse('gameresult-detail', kwargs={'pk': self.score.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Score.objects.filter(pk=self.score.pk).exists())
+
+    def test_delete_score_unauthenticated(self):
+        """Test deleting score without authentication"""
+        url = reverse('gameresult-detail', kwargs={'pk': self.score.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(Score.objects.filter(pk=self.score.pk).exists())
+
+    def test_clear_category_scores(self):
+        """Test clearing all scores for a specific category"""
+        # Create additional scores for the same category
+        Score.objects.create(
+            profile=self.profile,
+            category=self.category,
+            moves=15,
+            time_seconds=45,
+            stars=5,
+        )
+        Score.objects.create(
+            profile=self.profile,
+            category=self.category,
+            moves=25,
+            time_seconds=75,
+            stars=3,
+        )
+
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        # Should have 3 scores total (including setUp score)
+        self.assertEqual(
+            Score.objects.filter(
+                profile=self.profile, category=self.category
+            ).count(),
+            3,
+        )
+
+        url = reverse(
+            'gameresult-clear-category-scores',
+            kwargs={'category_code': self.category.code},
+        )
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Successfully deleted 3 scores', response.data['detail'])
+        self.assertEqual(
+            Score.objects.filter(
+                profile=self.profile, category=self.category
+            ).count(),
+            0,
+        )
+
+    def test_clear_category_scores_invalid_category(self):
+        """Test clearing scores for non-existent category"""
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        url = reverse(
+            'gameresult-clear-category-scores',
+            kwargs={'category_code': 'INVALID'},
+        )
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['detail'], 'Category not found.')
+
+    def test_clear_category_scores_no_scores(self):
+        """Test clearing scores for category with no user scores"""
+        # Create another category
+        empty_category = Category.objects.create(
+            name='Empty Category', code='EMPTY'
+        )
+
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        url = reverse(
+            'gameresult-clear-category-scores',
+            kwargs={'category_code': empty_category.code},
+        )
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.data['detail'], 'No scores found for this category.'
+        )
+
+    def test_clear_all_scores(self):
+        """Test clearing all user scores"""
+        # Create additional category and scores
+        category2 = Category.objects.create(
+            name='Test Category 2', code='TEST_CAT2'
+        )
+        Score.objects.create(
+            profile=self.profile,
+            category=category2,
+            moves=15,
+            time_seconds=45,
+            stars=5,
+        )
+
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        # Should have 2 scores total
+        self.assertEqual(Score.objects.filter(profile=self.profile).count(), 2)
+
+        url = reverse('gameresult-clear-all-scores')
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            'Successfully deleted all 2 scores', response.data['detail']
+        )
+        self.assertEqual(Score.objects.filter(profile=self.profile).count(), 0)
+
+    def test_clear_all_scores_no_scores(self):
+        """Test clearing all scores when user has no scores"""
+        # Delete the setup score
+        self.score.delete()
+
+        tokens = self.get_tokens_for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {tokens["access"]}'
+        )
+
+        url = reverse('gameresult-clear-all-scores')
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['detail'], 'No scores found to delete.')
+
+    def test_clear_all_scores_unauthenticated(self):
+        """Test clearing all scores without authentication"""
+        url = reverse('gameresult-clear-all-scores')
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class LeaderboardAPITest(APITestCase):
