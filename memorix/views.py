@@ -1,16 +1,18 @@
 from typing import ClassVar
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from api.permissions import IsOwnerOrReadOnly
-from common.leaderboard import get_category_leaderboard
-from common.utils import get_best_scores_data, get_user_scores_queryset
+from common.filters import LeaderboardFilter, ScoreFilter
+from common.utils import get_best_scores_data
 
-from .models import Category, Leaderboard
+from .models import Category, Leaderboard, Score
 from .serializers import (
     CategorySerializer,
     LeaderboardSerializer,
@@ -64,6 +66,15 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    filter_backends: ClassVar[list] = [
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ['code', 'name']
+    search_fields: ClassVar[list[str]] = ['name', 'code', 'description']
+    ordering_fields: ClassVar[list[str]] = ['name', 'code', 'created_at']
+    ordering: ClassVar[list[str]] = ['name']
 
 
 class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
@@ -72,6 +83,23 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
     serializer_class = ScoreSerializer
     permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]
     pagination_class = ScorePagination
+    filter_backends: ClassVar[list] = [
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    ]
+    filterset_class = ScoreFilter
+    search_fields: ClassVar[list[str]] = [
+        'category__name',
+        'profile__owner__username',
+    ]
+    ordering_fields: ClassVar[list[str]] = [
+        'completed_at',
+        'moves',
+        'time_seconds',
+        'stars',
+    ]
+    ordering: ClassVar[list[str]] = ['-completed_at']
 
     def get_permissions(self):
         """Assign permissions based on action"""
@@ -86,7 +114,18 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
         return super().get_throttles()
 
     def get_queryset(self):
-        return get_user_scores_queryset(self.request)
+        """Return queryset for the current user."""
+        user = self.request.user
+        if not user.is_authenticated:
+            return Score.objects.none()
+
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return Score.objects.none()
+
+        return Score.objects.filter(profile=profile).select_related(
+            'profile', 'profile__owner', 'category'
+        )
 
     def update(self, request, *args, **kwargs):
         """Disable score updates"""
@@ -132,8 +171,9 @@ class ScoreViewSet(BaseGameViewSetMixin, viewsets.ModelViewSet):
                 {'detail': 'Category not found.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        queryset = self.get_queryset().filter(category=category)
+        queryset = self.filter_queryset(
+            self.get_queryset().filter(category=category)
+        )
         page = self.paginate_queryset(queryset)
 
         if page is not None:
@@ -149,22 +189,34 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = LeaderboardSerializer
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    filter_backends: ClassVar[list] = [
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    ]
+    filterset_class = LeaderboardFilter
+    search_fields: ClassVar[list[str]] = [
+        'category__name',
+        'category__code',
+        'score__profile__owner__username',
+    ]
+    ordering_fields: ClassVar[list[str]] = [
+        'rank',
+        'category__code',
+        'score__moves',
+        'score__time_seconds',
+    ]
+    ordering: ClassVar[list[str]] = ['category', 'rank']
 
     def get_queryset(self):
-        """Optimize queryset based on action and filter by category."""
+        """Optimize queryset based on action."""
         if self.action == 'retrieve':
             return Leaderboard.objects.select_related(
                 'score', 'score__profile', 'score__profile__owner', 'category'
             )
-        category_id = self.request.query_params.get('category')
-        leaderboard_entries = get_category_leaderboard(category_id)
-        if leaderboard_entries:
-            entry_ids = [entry.id for entry in leaderboard_entries]
-            return Leaderboard.objects.filter(id__in=entry_ids).order_by(
-                'category', 'rank'
-            )
-        else:
-            return Leaderboard.objects.none()
+        return Leaderboard.objects.select_related(
+            'score', 'score__profile', 'score__profile__owner', 'category'
+        ).order_by('category', 'rank')
 
     @action(detail=False, methods=['get'], url_path='top/(?P<limit>[0-9]+)')
     def top_players(self, request, limit=None):

@@ -16,6 +16,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.select_related('owner').all()
     serializer_class = ProfileSerializer
     permission_classes: ClassVar[list] = [IsOwnerOrReadOnly]
+    filterset_fields: ClassVar[list[str]] = [
+        'owner__username',
+        'created_at',
+        'updated_at',
+    ]
 
     def get_permissions(self):
         """Determine permissions based on action."""
