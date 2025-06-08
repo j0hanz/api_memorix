@@ -23,14 +23,15 @@ A memory card game with leaderboards, user profiles, and performance tracking.
 
 ## Overview
 
-Memorix API is a Django REST Framework backend that powers a competitive memory card game. Players match cards across different themed categories, submit their scores, and compete on category-specific leaderboards. The API handles user authentication, score validation, leaderboard management, and profile customization.
+Memorix API is a Django REST Framework backend that powers a memory card game. Players match cards across different themed categories, submit their scores, and compete on category-specific leaderboards. The API handles user authentication, score validation, leaderboard management, and profile customization.
 
 ### Key Components
 - **User Management**: JWT authentication with customizable profiles
 - **Game Categories**: Themed card sets (Animals, Nature, Vehicles, etc.)
 - **Score System**: Validated game results with anti-cheat measures
-- **Leaderboards**: Real-time competitive rankings
-- **Background Tasks**: Async leaderboard updates and data processing
+- **Leaderboards**: Real-time rankings
+- **Leaderboard Updates**: Synchronous updates on score changes
+- **Background Tasks**: Optional async data initialization (not used for leaderboards)
 
 ---
 
@@ -50,7 +51,7 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
 - **Performance Tracking**: Best scores per category per user
 
 ### Competitive Features
-- **Real-time Leaderboards** updated via background tasks
+- **Real-time Leaderboards** updated immediately on score changes
 - **Category-specific Rankings** (top 5 per category)
 - **Star Rating System** (1-5 stars based on performance)
 - **Profile Pictures** via Cloudinary integration
@@ -59,7 +60,7 @@ Memorix API is a Django REST Framework backend that powers a competitive memory 
 - **Cross-field Validation**: Prevents impossible game combinations
 - **Rate Limiting**: 60 score submissions per hour per user
 - **Unique Constraints**: Prevents duplicate identical scores
-- **Background Processing**: Async leaderboard updates
+- **Leaderboard Processing**: Synchronous updates for instant accuracy
 
 ---
 
@@ -296,7 +297,7 @@ api_memorix/
 
 - **ViewSet Patterns**: `ReadOnlyModelViewSet` for public data, `ModelViewSet` for user-owned data
 - **Permission Classes**: `IsOwnerOrReadOnly` for user-specific resources
-- **Background Tasks**: Async leaderboard updates via django-background-tasks
+- **Leaderboard Updates**: Synchronous/direct updates (no background tasks)
 - **Signal Handlers**: Auto profile creation and leaderboard updates
 - **Computed Fields**: `SerializerMethodField()` for dynamic data
 
@@ -377,7 +378,7 @@ python manage.py initialize_data
 # Update leaderboards manually
 python manage.py initialize_data --leaderboards-only
 
-# Run background tasks
+# Run background tasks (optional, only for data initialization)
 python manage.py process_tasks
 
 # Create test data
