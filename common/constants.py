@@ -1,12 +1,12 @@
-# Profile constants
+# Default profile picture
 DEFAULT_PROFILE_PICTURE = 'profile_gtdj73'
 
-# Model field lengths
+# Field lengths and limits
 CATEGORY_NAME_MAX_LENGTH = 100
 CATEGORY_CODE_MAX_LENGTH = 50
 CATEGORY_DESCRIPTION_MAX_LENGTH = 500
 
-# Game constants
+# Game settings
 MIN_MOVES = 1
 MAX_MOVES = 10000
 MIN_TIME_SECONDS = 1
@@ -14,12 +14,10 @@ MAX_TIME_SECONDS = 86400
 MIN_STARS = 1
 MAX_STARS = 5
 MAX_LEADERBOARD_RANK = 1000
+HIGH_STAR_THRESHOLD = 4
+MAX_MOVES_FOR_HIGH_STARS = 100
 
-# Cross-validation constants
-HIGH_STAR_THRESHOLD = 4  # Stars considered "high" for validation
-MAX_MOVES_FOR_HIGH_STARS = 100  # Max moves allowed for high star rating
-
-# Rate limiting constants
+# Rate limits
 DEFAULT_THROTTLE_RATES = {
     'anon': '100/hour',
     'user': '1000/hour',
@@ -61,7 +59,7 @@ GAME_CATEGORIES = [
     },
 ]
 
-# Datetime constants
+# Datetime
 JUST_NOW_SECONDS = 10
 MINUTE_SECONDS = 60
 HOUR_MINUTES = 60
