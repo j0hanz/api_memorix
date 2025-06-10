@@ -133,21 +133,21 @@ Memorix API is a Django REST Framework backend that powers a memory card game. P
 
 ### Game API Endpoints
 
-| Method   | Endpoint                                          | Description                      | Auth Required |
-| -------- | ------------------------------------------------- | -------------------------------- | ------------- |
-| `GET`    | `/api/memorix/categories/`                        | List game categories             | ❌             |
-| `GET`    | `/api/memorix/categories/{id}/`                   | Get category details             | ❌             |
-| `POST`   | `/api/memorix/results/`                           | Submit game score                | ✅             |
-| `GET`    | `/api/memorix/results/`                           | List user's scores               | ✅             |
-| `GET`    | `/api/memorix/results/{id}/`                      | Get specific score details       | ✅             |
-| `DELETE` | `/api/memorix/results/{id}/`                      | Delete specific score            | ✅             |
-| `GET`    | `/api/memorix/results/best/`                      | Get user's best scores           | ✅             |
-| `GET`    | `/api/memorix/results/recent/`                    | Get user's recent scores         | ✅             |
-| `GET`    | `/api/memorix/results/category/{category_code}/`  | Get scores by category           | ✅             |
-| `DELETE` | `/api/memorix/results/clear/{category_code}/`     | Clear all scores for category    | ✅             |
-| `DELETE` | `/api/memorix/results/clear-all/`                 | Clear all user scores            | ✅             |
-| `GET`    | `/api/memorix/leaderboard/`                       | Global leaderboard               | ❌             |
-| `GET`    | `/api/memorix/leaderboard/?category={id}`         | Category leaderboard             | ❌             |
+| Method   | Endpoint                                         | Description                   | Auth Required |
+| -------- | ------------------------------------------------ | ----------------------------- | ------------- |
+| `GET`    | `/api/memorix/categories/`                       | List game categories          | ❌             |
+| `GET`    | `/api/memorix/categories/{id}/`                  | Get category details          | ❌             |
+| `POST`   | `/api/memorix/results/`                          | Submit game score             | ✅             |
+| `GET`    | `/api/memorix/results/`                          | List user's scores            | ✅             |
+| `GET`    | `/api/memorix/results/{id}/`                     | Get specific score details    | ✅             |
+| `DELETE` | `/api/memorix/results/{id}/`                     | Delete specific score         | ✅             |
+| `GET`    | `/api/memorix/results/best/`                     | Get user's best scores        | ✅             |
+| `GET`    | `/api/memorix/results/recent/`                   | Get user's recent scores      | ✅             |
+| `GET`    | `/api/memorix/results/category/{category_code}/` | Get scores by category        | ✅             |
+| `DELETE` | `/api/memorix/results/clear/{category_code}/`    | Clear all scores for category | ✅             |
+| `DELETE` | `/api/memorix/results/clear-all/`                | Clear all user scores         | ✅             |
+| `GET`    | `/api/memorix/leaderboard/`                      | Global leaderboard            | ❌             |
+| `GET`    | `/api/memorix/leaderboard/?category={id}`        | Category leaderboard          | ❌             |
 
 ### User Profile Endpoints
 
