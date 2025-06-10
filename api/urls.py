@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from .views import RootRoute
+from .views import LogoutView, RootRoute
 
 urlpatterns = [
     path('', RootRoute.as_view()),
@@ -13,6 +13,7 @@ urlpatterns = [
     path(
         'dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')
     ),
+    path('dj-rest-auth/logout/', LogoutView.as_view(), name='custom_logout'),
     path('api/', include('users.urls')),
     path('api/', include('memorix.urls')),
 ]

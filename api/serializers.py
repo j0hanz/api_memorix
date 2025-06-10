@@ -5,6 +5,7 @@ from dj_rest_auth.serializers import (
 )
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class CurrentUserSerializer(UserDetailsSerializer):
@@ -25,6 +26,24 @@ class CurrentUserSerializer(UserDetailsSerializer):
 
 class PublicJWTSerializer(BaseJWTSerializer):
     """Serializer for JWT tokens with refresh token included"""
+
+
+class LogoutSerializer(serializers.Serializer):
+    """Serializer for logout with JWT blacklisting"""
+
+    refresh = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        """Validate and blacklist the refresh token"""
+        refresh_token = attrs['refresh']
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception as e:
+            raise serializers.ValidationError(
+                _('Invalid refresh token or token already blacklisted.')
+            )
+        return attrs
 
 
 class CustomPasswordChangeSerializer(PasswordChangeSerializer):
