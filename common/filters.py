@@ -23,7 +23,7 @@ class ScoreFilter(filters.FilterSet):
         field_name='time_seconds', lookup_expr='lte'
     )
     category_code = filters.CharFilter(
-        field_name='category__code', lookup_expr='exact'
+        field_name='category__code', lookup_expr='iexact'
     )
     categories = filters.AllValuesMultipleFilter(field_name='category__code')
     player = filters.CharFilter(field_name='profile__owner__username')
