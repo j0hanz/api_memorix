@@ -39,10 +39,10 @@ class LogoutSerializer(serializers.Serializer):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-        except Exception as e:
+        except Exception:
             raise serializers.ValidationError(
                 _('Invalid refresh token or token already blacklisted.')
-            )
+            ) from None
         return attrs
 
 

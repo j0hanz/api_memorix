@@ -28,10 +28,6 @@ class LogoutView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             return Response(
-                {'detail': 'Logout successful.'},
-                status=status.HTTP_200_OK
+                {'detail': 'Logout successful.'}, status=status.HTTP_200_OK
             )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
